@@ -31,13 +31,13 @@ zip: $(TARGETS)
 
 docker:  $(DIST)/twSdrPower Docker/Dockerfile
 	cp dist/twSdrPower Docker/
-	cd Docker && docker build -t twsnmp/twSdrPower .
+	cd Docker && docker build -t twsnmp/twsdrpower .
 
 dockerarm: Docker/Dockerfile dist/twSdrPower.arm dist/twSdrPower.arm64
 	cp dist/twSdrPower.arm Docker/twSdrPower
-	cd Docker && docker buildx build --platform linux/arm/v7 -t twsnmp/twSdrPower:armv7_$(VERSION) --push .
+	cd Docker && docker buildx build --platform linux/arm/v7 -t twsnmp/twsdrpower:armv7_$(VERSION) --push .
 	cp dist/twSdrPower.arm64 Docker/twSdrPower
-	cd Docker && docker buildx build --platform linux/arm64 -t twsnmp/twSdrPower:arm64_$(VERSION) --push .
+	cd Docker && docker buildx build --platform linux/arm64 -t twsnmp/twsdrpower:arm64_$(VERSION) --push .
 
 ### 実行ファイルのビルドルール
 $(DIST)/twSdrPower.app: $(SRC)
