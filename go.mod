@@ -2,7 +2,11 @@ module github.com/twsnmp/twSdrPower
 
 go 1.17
 
-require github.com/shirou/gopsutil v3.21.11+incompatible
+require (
+	github.com/go-echarts/go-echarts/v2 v2.2.4
+	github.com/samuel/go-rtlsdr v0.0.0-20220325025222-e7c78c1ec1ac
+	github.com/shirou/gopsutil v3.21.11+incompatible
+)
 
 require (
 	github.com/go-ole/go-ole v1.2.6 // indirect
