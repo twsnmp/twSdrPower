@@ -78,6 +78,10 @@ func startSdrPower(ctx context.Context) {
 					dev = nil
 					log.Println("close RTL-SDR")
 					outChart()
+					if once {
+						log.Println("stop sdr power")
+						return
+					}
 				}
 			} else {
 				time.Sleep(time.Millisecond * 100)

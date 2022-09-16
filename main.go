@@ -31,6 +31,7 @@ var chartFolder = "./"
 var chartTitle = ""
 var dark = false
 var list = false
+var once = false
 var syslogInterval = 600
 
 func init() {
@@ -44,6 +45,7 @@ func init() {
 	flag.StringVar(&chartFolder, "folder", "./", "chart folder")
 	flag.BoolVar(&dark, "dark", false, "dark mode chart")
 	flag.BoolVar(&list, "list", false, "List RTL-STR")
+	flag.BoolVar(&once, "once", false, "Only once")
 	flag.IntVar(&syslogInterval, "interval", 600, "syslog send interval(sec)")
 	flag.VisitAll(func(f *flag.Flag) {
 		if s := os.Getenv("TWSDRPOWER_" + strings.ToUpper(f.Name)); s != "" {

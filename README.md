@@ -12,12 +12,15 @@ RTL-SDRを利用して周辺の電波の強度をモニタし情報をTWSNMP FC�
 syslogで送信するためのセンサープログラムです。  
 現在のバージョンでは以下の情報を取得できます。
 
-- 24Mhz -1.67GHzの1MHz単位の電波の強度情報
+- 指定範囲(デフォルト24Mhz -1.67GHz)の指定単位(デフォルト1MHz）の電波の強度情報
 - センサーのリソース
+- 統計情報
+
+取得した電波強度をグラフ出力することもできます。
 
 ## Status
 
-開発を始めたばかりです。
+最初のバージョン(v1.0.0)をリリース
 
 ## Build
 
@@ -47,16 +50,32 @@ $make zip
 を実行します。ZIPファイルが`dist/`ディレクトリに作成されます。
 
 ## Run
-
 ### 使用方法
 
 ```
-Usage of ./twSdrPower.app:
-Usage of dist/twSdrPower.app:
-  -sdr int
-    	RTL-SDRのデバイス番号
+Usage of ./dist/twSdrPower.app:
+  -chart string
+    	chart title
+  -dark
+    	dark mode chart
+  -end string
+    	end frequency (default "1667M")
+  -folder string
+    	chart folder (default "./")
+  -gain int
+    	RTL-SDR Tuner gain (0=auto)
   -interval int
     	syslog send interval(sec) (default 600)
+  -list
+    	List RTL-STR
+  -once
+    	Only once
+  -sdr int
+    	RTL-SDR Device Number
+  -start string
+    	start frequency (default "24M")
+  -step string
+    	step frequency (default "1M")
   -syslog string
     	syslog destnation list
 ```
@@ -68,17 +87,24 @@ syslogの送信先はカンマ区切りで複数指定できます。
 -syslog 192.168.1.1,192.168.1.2:5514
 ```
 
-
-### 起動方法
-
 起動するためにはsyslogの送信先(-syslog)が必要です。
 
 Mac OS,Windows,Linuxの環境では以下のコマンドで起動できます。  
-（例はLinux場合）
+（例はMac OS場合）
 
 ```
-#./twSdrPower  -syslog 192.168.1.1
+%twSdrPower.app -chart noise -gain 500  -dark  -folder /tmp -interval 300 -sdr 1 -syslog 192.168.1.250
 ```
+
+### デバイス番号の確認
+ -list  オプションを付けて起動でます。
+
+```
+ % twSdrPower.app -list
+Device List count=1
+0,Generic RTL2832U OEM,Realtek,RTL2838UHIDIR,00000001
+``
+先頭の0がデバイス番号です。
 
 ## Copyright
 
