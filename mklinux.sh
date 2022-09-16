@@ -20,5 +20,5 @@ make
 make install
 cd /twSdrPower
 go mod tidy
-go build -o $1/twSdrPower -ldflags="-extldflags \"-static -s\" -w -X main.version=$2 -X main.commit=$3"
+go build -o $1/twSdrPower -ldflags="-extldflags -w -X main.version=$2 -X main.commit=$3"
 

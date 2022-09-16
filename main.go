@@ -69,7 +69,7 @@ func main() {
 	log.SetOutput(new(logWriter))
 	setScanRange()
 	log.Printf("version=%s", fmt.Sprintf("%s(%s)", version, commit))
-	log.Printf("sdr=%d,chart=%s,interval=%d,start=%d,end=%d,step=%d", sdr, chartTitle, syslogInterval, startHz, endHz, stepHz)
+	log.Printf("sdr=%d,chart=%s,interval=%d,start=%d,end=%d,step=%d,gain=%d", sdr, chartTitle, syslogInterval, startHz, endHz, stepHz, gain)
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 	ctx, cancel := context.WithCancel(context.Background())
@@ -113,7 +113,6 @@ func setScanRange() {
 	if bin > 2000 {
 		log.Fatalf("setRange  bin > 2000")
 	}
-	log.Printf("bin=%d", bin)
 }
 
 // Get frequency

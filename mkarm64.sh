@@ -21,5 +21,5 @@ make
 make install
 cd /twSdrPower
 go mod tidy
-CC=aarch64-linux-gnu-gcc GOOS=linux GOARCH=arm64  CGO_ENABLED=1 go build -o $1/twSdrPower.arm64  -ldflags="-extldflags \"-static -s\" -w -X main.version=$2 -X main.commit=$3"
+CC=aarch64-linux-gnu-gcc GOOS=linux GOARCH=arm64  CGO_ENABLED=1 go build -o $1/twSdrPower.arm64  -ldflags="-extldflags -w -X main.version=$2 -X main.commit=$3"
 
