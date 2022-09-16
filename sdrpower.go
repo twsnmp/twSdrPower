@@ -80,7 +80,7 @@ func startSdrPower(ctx context.Context) {
 					outChart()
 					if once {
 						log.Println("stop sdr power")
-						return
+						os.Exit(0)
 					}
 				}
 			} else {
