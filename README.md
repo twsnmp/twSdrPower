@@ -23,7 +23,20 @@ syslogで送信するためのセンサープログラムです。
 最初のバージョン(v1.0.0)をリリース
 
 ## Build
+### Env
+ビルドするためには、以下が必要です。
 
+- go 1.17
+- librtlsdr
+- docker(Linux版のビルド)
+- make
+
+RTL-SDRのライブラリはMac OSの場合
+https://formulae.brew.sh/formula/librtlsdr
+でインストールしました。
+Linux版は、Docker環境の中でビルドするのでmakeとDokcerだけでビルドできます。
+
+### Build
 ビルドはmakeで行います。
 ```
 $make
