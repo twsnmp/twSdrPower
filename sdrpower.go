@@ -19,7 +19,6 @@ var total = 0
 var scan = 0
 var dev *rtl.Device
 var id = time.Now().Unix()
-var xaxis = []int{}
 var data = []opts.LineData{}
 
 // startSdrPower : start SDR Power Monitor
@@ -29,16 +28,15 @@ func startSdrPower(ctx context.Context) {
 	timer := time.NewTicker(time.Second * time.Duration(syslogInterval))
 	defer timer.Stop()
 	count := 0
-	mHz := 24
+	hz := startHz
 	dur := int64(0)
 	for {
 		select {
 		case <-timer.C:
-			if mHz >= 1678 {
-				mHz = 24
+			if hz >= endHz {
+				hz = startHz
 				id = time.Now().Unix()
 				scan++
-				outChart()
 			}
 			syslogCh <- fmt.Sprintf("type=Stats,total=%d,count=%d,ps=%.2f,send=%d,param=%d,scan=%d,dur=%d",
 				total, count, float64(count)/float64(syslogInterval), syslogCount, sdr, scan, dur)
@@ -55,30 +53,31 @@ func startSdrPower(ctx context.Context) {
 			log.Println("stop sdr power")
 			return
 		default:
-			if mHz < 1678 {
+			if hz <= endHz {
 				if dev == nil {
 					if err := openRTLSdr(); err != nil {
 						log.Printf("failed to open RTL-SDR err=%v", err)
-						mHz = 1678
+						hz = endHz + stepHz
 						dur = -1
 						continue
 					}
 					log.Println("open RTL-SDR")
 				}
-				if err := doScan(mHz); err != nil {
+				if err := doScan(hz); err != nil {
 					log.Printf("failed to scan err=%v", err)
-					mHz = 1678
+					hz = endHz + stepHz
 					dur = -1
 					continue
 				}
 				count++
 				total++
-				mHz++
-				if mHz >= 1678 {
+				hz += stepHz
+				if hz > endHz {
 					dur = time.Now().Unix() - id
 					dev.Close()
 					dev = nil
 					log.Println("close RTL-SDR")
+					outChart()
 				}
 			} else {
 				time.Sleep(time.Millisecond * 100)
@@ -89,9 +88,9 @@ func startSdrPower(ctx context.Context) {
 }
 
 // スキャンの実施
-func doScan(mHz int) error {
+func doScan(hz int) error {
 	// set center freq
-	if err := dev.SetCenterFreq(uint(mHz * 1e6)); err != nil {
+	if err := dev.SetCenterFreq(uint(hz)); err != nil {
 		return err
 	}
 	// wait 5mSec
@@ -120,9 +119,8 @@ func doScan(mHz int) error {
 	dbm := float64(p)
 	dbm /= float64(1e6) // 1M
 	dbm = 10 * math.Log10(dbm)
-	xaxis = append(xaxis, mHz)
-	data = append(data, opts.LineData{Value: dbm})
-	syslogCh <- fmt.Sprintf("type=Power,id=%x,mHz=%d,dbm=%.3f", id, mHz, dbm)
+	data = append(data, opts.LineData{Value: []float64{float64(hz) / 1e6, dbm}})
+	syslogCh <- fmt.Sprintf("type=Power,id=%x,freq=%d,dbm=%.3f", id, hz, dbm)
 	return nil
 }
 
@@ -135,8 +133,17 @@ func openRTLSdr() error {
 	// no direct sample
 	// no offset tuning
 	// set auto gain
-	if err := dev.SetTunerGainMode(false); err != nil {
-		return err
+	if gain == 0 {
+		if err := dev.SetTunerGainMode(false); err != nil {
+			return err
+		}
+	} else {
+		if err := dev.SetTunerGainMode(true); err != nil {
+			return err
+		}
+		if err := dev.SetTunerGain(gain); err != nil {
+			return err
+		}
 	}
 	// no PPM
 	// disable biasTee
@@ -165,8 +172,7 @@ func openRTLSdr() error {
 }
 
 func outChart() {
-	if chartTitle == "" || len(xaxis) < 1 {
-		xaxis = []int{}
+	if chartTitle == "" || len(data) < 1 {
 		data = []opts.LineData{}
 		return
 	}
@@ -179,23 +185,22 @@ func outChart() {
 	line.SetGlobalOptions(
 		charts.WithTitleOpts(opts.Title{Title: title}),
 		charts.WithInitializationOpts(opts.Initialization{Theme: theme}),
-		charts.WithToolboxOpts(opts.Toolbox{
-			Show:  true,
-			Right: "10%",
-			Feature: &opts.ToolBoxFeature{
-				SaveAsImage: &opts.ToolBoxFeatureSaveAsImage{
-					Show:  true,
-					Type:  "png",
-					Title: "Save to Image",
-				},
-				DataZoom: &opts.ToolBoxFeatureDataZoom{
-					Show: true,
-				},
-			}},
-		),
+		charts.WithDataZoomOpts(opts.DataZoom{Type: "slider"}),
+		charts.WithTooltipOpts(opts.Tooltip{Show: true, Trigger: "axis"}),
+		charts.WithXAxisOpts(opts.XAxis{
+			AxisLabel: &opts.AxisLabel{Show: true, Formatter: "{value} MHz"},
+			Type:      "value",
+		}),
+		charts.WithYAxisOpts(opts.YAxis{
+			AxisLabel: &opts.AxisLabel{Show: true, Formatter: "{value} dbm"},
+			Type:      "value",
+		}),
 	)
-	line.SetXAxis(xaxis).
-		AddSeries("power", data)
+	line.AddSeries("power", data).SetSeriesOptions(
+		charts.WithLineChartOpts(opts.LineChart{
+			Smooth: true,
+		}),
+	)
 	file := filepath.Join(chartFolder, chartTitle+"-"+time.Now().Format("20060102150405")+".html")
 	f, err := os.Create(file)
 	if err != nil {
@@ -204,6 +209,5 @@ func outChart() {
 		line.Render(f)
 		defer f.Close()
 	}
-	xaxis = []int{}
 	data = []opts.LineData{}
 }
