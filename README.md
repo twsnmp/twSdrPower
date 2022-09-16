@@ -63,7 +63,17 @@ $make zip
 を実行します。ZIPファイルが`dist/`ディレクトリに作成されます。
 
 ## Run
-### 使用方法
+
+### Env
+実行するためには、RTL-SDRのライブラリが必要です。
+Mac OSの場合は、開発環境の説明にあるbrewでインストールできます。
+Linux環境にはrtl-sdrパッケージをインストールしてください。
+
+```
+$sudo apt install rtl-sdr
+```
+
+### Usage
 
 ```
 Usage of ./dist/twSdrPower.app:
@@ -109,7 +119,7 @@ Mac OS,Windows,Linuxの環境では以下のコマンドで起動できます。
 %twSdrPower.app -chart noise -gain 500  -dark  -folder /tmp -interval 300 -sdr 1 -syslog 192.168.1.250
 ```
 
-### デバイス番号の確認
+### Find Device
  -list  オプションを付けて起動でます。
 
 ```

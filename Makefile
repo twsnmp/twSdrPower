@@ -27,7 +27,7 @@ mac: $(DIST)/twSdrPower.app
 zip: $(TARGETS)
 	cd dist && $(ZIP) twSdrPower_mac.zip twSdrPower.app
 	cd dist && $(ZIP) twSdrPower_linux_amd64.zip twSdrPower
-	cd dist && $(ZIP) twSdrPower_linux_arm64.zip twSdrPower.arm*
+	cd dist && $(ZIP) twSdrPower_linux_arm.zip twSdrPower.arm*
 
 ### 実行ファイルのビルドルール
 $(DIST)/twSdrPower.app: $(SRC)
