@@ -15,3 +15,4 @@
 # vendor/
 dist/
 Docker/twSdrPower
+.DS_Store
