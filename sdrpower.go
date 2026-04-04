@@ -38,8 +38,8 @@ func startSdrPower(ctx context.Context) {
 				id = time.Now().Unix()
 				scan++
 			}
-			syslogCh <- fmt.Sprintf("type=Stats,total=%d,count=%d,ps=%.2f,send=%d,param=%d,scan=%d,dur=%d",
-				total, count, float64(count)/float64(syslogInterval), syslogCount, sdr, scan, dur)
+			sendSyslog(fmt.Sprintf("type=Stats,total=%d,count=%d,ps=%.2f,send=%d,param=%d,scan=%d,dur=%d",
+				total, count, float64(count)/float64(syslogInterval), syslogCount, sdr, scan, dur))
 			log.Printf("type=Stats,total=%d,count=%d,ps=%.2f,send=%d,param=%d,scan=%d,dur=%d",
 				total, count, float64(count)/float64(syslogInterval), syslogCount, sdr, scan, dur)
 			syslogCount = 0
@@ -124,7 +124,7 @@ func doScan(hz int) error {
 	dbm /= float64(1e6) // 1M
 	dbm = 10 * math.Log10(dbm)
 	data = append(data, opts.LineData{Value: []float64{float64(hz) / 1e6, dbm}})
-	syslogCh <- fmt.Sprintf("type=Power,id=%x,freq=%d,dbm=%.3f", id, hz, dbm)
+	sendSyslog(fmt.Sprintf("type=Power,id=%x,freq=%d,dbm=%.3f", id, hz, dbm))
 	return nil
 }
 

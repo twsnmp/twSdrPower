@@ -10,11 +10,10 @@ import (
 	"time"
 )
 
-var syslogCh chan string
+var syslogCh = make(chan string, 2000)
 var syslogCount = 0
 
 func startSyslog(ctx context.Context) {
-	syslogCh = make(chan string, 2000)
 	dstList := strings.Split(syslogDst, ",")
 	dst := []net.Conn{}
 	for _, d := range dstList {
@@ -25,7 +24,7 @@ func startSyslog(ctx context.Context) {
 		if err != nil {
 			log.Fatal(err)
 		}
-		syslogCh <- fmt.Sprintf("start send syslog to %s", d)
+		sendSyslog(fmt.Sprintf("start send syslog to %s", d))
 		dst = append(dst, s)
 	}
 	host, err := os.Hostname()
@@ -48,6 +47,16 @@ func startSyslog(ctx context.Context) {
 			for _, d := range dst {
 				d.Write([]byte(s))
 			}
+		}
+	}
+}
+
+func sendSyslog(msg string) {
+	select {
+	case syslogCh <- msg:
+	default:
+		if debug {
+			log.Println("syslog channel full, skipping message")
 		}
 	}
 }

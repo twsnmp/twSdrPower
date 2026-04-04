@@ -32,6 +32,7 @@ var chartTitle = ""
 var dark = false
 var list = false
 var once = false
+var debug = false
 var syslogInterval = 600
 
 func init() {
@@ -46,6 +47,7 @@ func init() {
 	flag.BoolVar(&dark, "dark", false, "dark mode chart")
 	flag.BoolVar(&list, "list", false, "List RTL-STR")
 	flag.BoolVar(&once, "once", false, "Only once")
+	flag.BoolVar(&debug, "debug", false, "Debug mode")
 	flag.IntVar(&syslogInterval, "interval", 600, "syslog send interval(sec)")
 	flag.VisitAll(func(f *flag.Flag) {
 		if s := os.Getenv("TWSDRPOWER_" + strings.ToUpper(f.Name)); s != "" {
@@ -78,7 +80,7 @@ func main() {
 	go startSyslog(ctx)
 	go startSdrPower(ctx)
 	<-quit
-	syslogCh <- "quit by signal"
+	sendSyslog("quit by signal")
 	time.Sleep(time.Second * 1)
 	log.Println("quit by signal")
 	cancel()
