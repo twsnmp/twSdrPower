@@ -1,7 +1,7 @@
 .PHONY: all test clean zip mac docker
 
 ### バージョンの定義
-VERSION     := "v2.0.0"
+VERSION     := $(shell git describe --tags --abbrev=0)
 COMMIT      := $(shell git rev-parse --short HEAD)
 WD          := $(shell pwd)
 ### コマンドの定義
