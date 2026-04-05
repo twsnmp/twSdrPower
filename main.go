@@ -15,7 +15,7 @@ import (
 	"github.com/samuel/go-rtlsdr/rtl"
 )
 
-var version = "v1.0.0"
+var version = "v2.0.0"
 var commit = ""
 var syslogDst = ""
 var mqttDst = ""
