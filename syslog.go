@@ -24,6 +24,7 @@ func startSyslog(ctx context.Context) {
 		if err != nil {
 			log.Fatal(err)
 		}
+		log.Printf("start send syslog to %s", d)
 		sendSyslog(fmt.Sprintf("start send syslog to %s", d))
 		dst = append(dst, s)
 	}

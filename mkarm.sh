@@ -17,10 +17,10 @@ git clone https://gitea.osmocom.org/sdr/rtl-sdr.git
 cd rtl-sdr/
 mkdir build
 cd build
-cmake -D CMAKE_INSTALL_PREFIX=/usr/ ../
+cmake -D CMAKE_INSTALL_PREFIX=/usr/ -DDETACH_KERNEL_DRIVER=ON ../
 make
 make install
 cd /twSdrPower
 go mod tidy
-CC=arm-linux-gnueabihf-gcc GOOS=linux GOARCH=arm GOARM=7 CGO_ENABLED=1 go build -o $1/twSdrPower.arm  -ldflags="-extldflags -w -X main.version=$2 -X main.commit=$3"
+CC=arm-linux-gnueabihf-gcc GOOS=linux GOARCH=arm GOARM=7 CGO_ENABLED=1 go build -o $1/twSdrPower.arm  -ldflags="-w -extldflags '-static' -X main.version=$2 -X main.commit=$3"
 

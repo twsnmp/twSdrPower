@@ -18,6 +18,11 @@ import (
 var version = "v1.0.0"
 var commit = ""
 var syslogDst = ""
+var mqttDst = ""
+var mqttUser = ""
+var mqttPassword = ""
+var mqttClientID = "twSdrPower"
+var mqttTopic = "twsnmp/twSdrPower"
 
 var sdr = 0
 var startHzStr = "24M"
@@ -37,6 +42,11 @@ var syslogInterval = 600
 
 func init() {
 	flag.StringVar(&syslogDst, "syslog", "", "syslog destnation list")
+	flag.StringVar(&mqttDst, "mqtt", "", "MQTT broker destination")
+	flag.StringVar(&mqttUser, "mqttUser", "", "MQTT user")
+	flag.StringVar(&mqttPassword, "mqttPassword", "", "MQTT password")
+	flag.StringVar(&mqttClientID, "mqttClientID", "twSdrPower", "MQTT client ID")
+	flag.StringVar(&mqttTopic, "mqttTopic", "twsnmp/twSdrPower", "MQTT topic")
 	flag.IntVar(&sdr, "sdr", 0, "RTL-SDR Device Number")
 	flag.IntVar(&gain, "gain", 0, "RTL-SDR Tuner gain (0=auto)")
 	flag.StringVar(&startHzStr, "start", "24M", "start frequency")
@@ -73,11 +83,12 @@ func main() {
 	log.SetOutput(new(logWriter))
 	setScanRange()
 	log.Printf("version=%s", fmt.Sprintf("%s(%s)", version, commit))
-	log.Printf("sdr=%d,chart=%s,interval=%d,start=%d,end=%d,step=%d,gain=%d", sdr, chartTitle, syslogInterval, startHz, endHz, stepHz, gain)
+	log.Printf("sdr=%d,chart=%s,interval=%d,start=%d,end=%d,step=%d,gain=%d,mqtt=%s", sdr, chartTitle, syslogInterval, startHz, endHz, stepHz, gain, mqttDst)
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
 	ctx, cancel := context.WithCancel(context.Background())
 	go startSyslog(ctx)
+	go startMQTT(ctx)
 	go startSdrPower(ctx)
 	<-quit
 	sendSyslog("quit by signal")

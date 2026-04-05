@@ -24,12 +24,12 @@ var data = []opts.LineData{}
 // startSdrPower : start SDR Power Monitor
 func startSdrPower(ctx context.Context) {
 	log.Println("start sdr power")
-
 	timer := time.NewTicker(time.Second * time.Duration(syslogInterval))
 	defer timer.Stop()
 	count := 0
 	hz := startHz
 	dur := int64(0)
+	mqttData := new(mqttPowerDataEnt)
 	for {
 		select {
 		case <-timer.C:
@@ -38,10 +38,21 @@ func startSdrPower(ctx context.Context) {
 				id = time.Now().Unix()
 				scan++
 			}
+			ps := float64(count) / float64(syslogInterval)
 			sendSyslog(fmt.Sprintf("type=Stats,total=%d,count=%d,ps=%.2f,send=%d,param=%d,scan=%d,dur=%d",
-				total, count, float64(count)/float64(syslogInterval), syslogCount, sdr, scan, dur))
+				total, count, ps, syslogCount, sdr, scan, dur))
 			log.Printf("type=Stats,total=%d,count=%d,ps=%.2f,send=%d,param=%d,scan=%d,dur=%d",
-				total, count, float64(count)/float64(syslogInterval), syslogCount, sdr, scan, dur)
+				total, count, ps, syslogCount, sdr, scan, dur)
+			publishMQTT(&mqttSdrStatsDataEnt{
+				Time:  time.Now().Format(time.RFC3339),
+				Total: total,
+				Count: count,
+				PS:    ps,
+				Send:  syslogCount,
+				SDR:   sdr,
+				Scan:  scan,
+				Dur:   dur,
+			})
 			syslogCount = 0
 			count = 0
 			sendMonitor()
@@ -63,16 +74,24 @@ func startSdrPower(ctx context.Context) {
 					}
 					log.Println("open RTL-SDR")
 				}
-				if err := doScan(hz); err != nil {
+				if dbm, err := doScan(hz); err != nil {
 					log.Printf("failed to scan err=%v", err)
 					hz = endHz + stepHz
 					dur = -1
 					continue
+				} else {
+					sendSyslog(fmt.Sprintf("type=Power,id=%x,freq=%d,dbm=%.3f", id, hz, dbm))
+					mqttData.Freq = append(mqttData.Freq, hz)
+					mqttData.DBM = append(mqttData.DBM, dbm)
 				}
 				count++
 				total++
 				hz += stepHz
 				if hz > endHz {
+					mqttData.Time = time.Now().Format(time.RFC3339)
+					mqttData.ID = fmt.Sprintf("%x", id)
+					publishMQTT(mqttData)
+					mqttData = new(mqttPowerDataEnt)
 					dur = time.Now().Unix() - id
 					dev.Close()
 					dev = nil
@@ -92,23 +111,23 @@ func startSdrPower(ctx context.Context) {
 }
 
 // スキャンの実施
-func doScan(hz int) error {
+func doScan(hz int) (float64, error) {
 	// set center freq
 	if err := dev.SetCenterFreq(uint(hz)); err != nil {
-		return err
+		return 0, err
 	}
 	// wait 5mSec
 	time.Sleep(time.Millisecond * 5)
 	// Dummy Read
 	dmy := make([]byte, 1<<12)
 	if _, err := dev.Read(dmy); err != nil {
-		return err
+		return 0, err
 	}
 	// read data
 	buf := make([]byte, 16384)
 	n, err := dev.Read(buf)
 	if err != nil {
-		return err
+		return 0, err
 	}
 	p := 0
 	t := 0
@@ -124,8 +143,7 @@ func doScan(hz int) error {
 	dbm /= float64(1e6) // 1M
 	dbm = 10 * math.Log10(dbm)
 	data = append(data, opts.LineData{Value: []float64{float64(hz) / 1e6, dbm}})
-	sendSyslog(fmt.Sprintf("type=Power,id=%x,freq=%d,dbm=%.3f", id, hz, dbm))
-	return nil
+	return dbm, nil
 }
 
 func openRTLSdr() error {
