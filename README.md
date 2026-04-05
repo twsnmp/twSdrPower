@@ -1,86 +1,90 @@
 # twSdrPower
-This sensor monitors radio power by frequency and transmits it via syslog.
+[日本語版はこちら](README_ja.md)
 
-TWSNMP FCのための周波数別の無線電力センサーです。
+This sensor monitors radio power by frequency and transmits it via syslog and MQTT.
+It is designed to scan specific frequency ranges and provide signal strength data to management systems like TWSNMP FC.
 
-[![Godoc Reference](https://godoc.org/github.com/twsnmp/twSdrPower?status.svg)](http://godoc.org/github.com/twsnmp/twSdrPower)
+[![Godoc Reference](https://img.shields.io/badge/godoc-reference-blue.svg)](https://pkg.go.dev/github.com/twsnmp/twSdrPower)
 [![Go Report Card](https://goreportcard.com/badge/twsnmp/twSdrPower)](https://goreportcard.com/report/twsnmp/twSdrPower)
+
+![twSdrPower Infographic](images/twsrdpower.png)
 
 ## Overview
 
-RTL-SDRを利用して周辺の電波の強度をモニタし情報をTWSNMP FCなどへ  
-syslogで送信するためのセンサープログラムです。  
-現在のバージョンでは以下の情報を取得できます。
+twSdrPower is a sensor program that uses RTL-SDR to monitor the strength (power) of surrounding radio waves and sends the information to management systems such as TWSNMP FC via Syslog or MQTT. It is useful for electromagnetic noise surveys and visualizing the usage status of specific frequency bands.
 
-- 指定範囲(デフォルト24Mhz -1.67GHz)の指定単位(デフォルト1MHz）の電波の強度情報
-- センサーのリソース
-- 統計情報
+### Key Features
 
-取得した電波強度をグラフ出力することもできます。
+- **Frequency-specific Power Monitoring**: Scans a specified range (24MHz - 1.7GHz) and calculates the signal strength (dBm) for each frequency.
+- **Multi-protocol Transmission**: Collected data can be transmitted in real-time via Syslog (RFC5424 format) or MQTT (JSON format).
+- **Resource Monitoring**: Monitors the CPU, memory, and network usage of the device where the sensor is running and sends it as statistical information.
+- **Visual Analysis**: Features automatic output of scan results as HTML charts. Dark mode is also supported.
+
+### Data Details
+
+The current version can obtain and transmit the following information:
+
+- **Radio Strength Data (Power)**: Radio strength information for each frequency (default 1MHz unit) in the specified range (default 24MHz - 1.67GHz).
+- **Resource Monitor (Monitor)**: Resources of the sensor itself (CPU usage, memory usage, network transmission/reception).
+- **Statistics (Stats)**: Operational statistics such as the number of scans, total data count, and number of successful transmissions.
+
+The acquired radio strength can also be output as a graph (HTML format).
 
 ## Status
 
-最初のバージョン(v1.0.0)をリリース
+v2.0.0 Added MQTT transmission function, improved build environment
 
 ## Build
 ### Env
-ビルドするためには、以下が必要です。
+To build, you need the following:
 
-- go 1.17
+- Go 1.25 or higher
 - librtlsdr
-- docker(Linux版のビルド)
+- Docker (required for building the Linux version)
 - make
 
-RTL-SDRのライブラリはMac OSの場合
-https://formulae.brew.sh/formula/librtlsdr
-でインストールしました。
-Linux版は、Docker環境の中でビルドするのでmakeとDokcerだけでビルドできます。
+The RTL-SDR library can be installed with Homebrew on Mac OS.
+```bash
+brew install librtlsdr
+```
+The Linux version is built within a Docker environment, so it can be built if the host environment has make and Docker.
 
 ### Build
-ビルドはmakeで行います。
+Building is done with make.
+```bash
+$ make
 ```
-$make
+The following targets can be specified:
 ```
-以下のターゲットが指定できます。
-```
-  all        全実行ファイルのビルド（省略可能）
-  mac        Mac用の実行ファイルのビルド
-  clean      ビルドした実行ファイルの削除
-  zip        リリース用のZIPファイルを作成
+  all        Build all executables (Mac, Linux amd64/arm/arm64)
+  mac        Build executable for Mac
+  clean      Delete built executables and the dist directory
+  zip        Create a ZIP file for release
 ```
 
-```
-$make
-```
-を実行すれば、MacOS,Windows,Linux(amd64),Linux(arm)用の実行ファイルが、  
-`dist`のディレクトリに作成されます。
-
-
-配布用のZIPファイルを作成するためには、
-```
-$make zip
-```
-を実行します。ZIPファイルが`dist/`ディレクトリに作成されます。
+The built executables are created in the `dist` directory.
 
 ## Run
 
 ### Env
-実行するためには、RTL-SDRのライブラリが必要です。
-Mac OSの場合は、開発環境の説明にあるbrewでインストールできます。
-Linux環境にはrtl-sdrパッケージをインストールしてください。
+To run, the RTL-SDR library is required.
+On Mac OS, it can be installed with brew as described in the development environment section.
+Please install the rtl-sdr package in the Linux environment.
 
-```
-$sudo apt install rtl-sdr
+```bash
+$ sudo apt install rtl-sdr
 ```
 
 ### Usage
 
 ```
-Usage of ./dist/twSdrPower.app:
+Usage of twSdrPower:
   -chart string
     	chart title
   -dark
     	dark mode chart
+  -debug
+    	Debug mode
   -end string
     	end frequency (default "1667M")
   -folder string
@@ -88,9 +92,19 @@ Usage of ./dist/twSdrPower.app:
   -gain int
     	RTL-SDR Tuner gain (0=auto)
   -interval int
-    	syslog send interval(sec) (default 600)
+    	syslog/MQTT send interval(sec) (default 600)
   -list
     	List RTL-STR
+  -mqtt string
+    	MQTT broker destination (e.g., 192.168.1.1:1883)
+  -mqttClientID string
+    	MQTT client ID (default "twSdrPower")
+  -mqttPassword string
+    	MQTT password
+  -mqttTopic string
+    	MQTT topic (default "twsnmp/twSdrPower")
+  -mqttUser string
+    	MQTT user
   -once
     	Only once
   -sdr int
@@ -100,40 +114,43 @@ Usage of ./dist/twSdrPower.app:
   -step string
     	step frequency (default "1M")
   -syslog string
-    	syslog destnation list
+    	syslog destination list (comma separated)
 ```
 
-syslogの送信先はカンマ区切りで複数指定できます。  
-:に続けてポート番号を指定することもできます。
-
-```
+#### Syslog Destination Configuration
+Multiple syslog destinations can be specified by comma-separating them. It is also possible to specify a port number.
+```bash
 -syslog 192.168.1.1,192.168.1.2:5514
 ```
 
-起動するためにはsyslogの送信先(-syslog)が必要です。
-
-Mac OS,Windows,Linuxの環境では以下のコマンドで起動できます。  
-（例はMac OS場合）
-
+#### MQTT Transmission Configuration
+Specify the MQTT broker information.
+```bash
+-mqtt 192.168.1.1:1883 -mqttTopic my/topic
 ```
-%twSdrPower.app -chart noise -gain 500  -dark  -folder /tmp -interval 300 -sdr 1 -syslog 192.168.1.250
+Data sent via MQTT is in JSON format. It is sent to the following topics:
+- `{topic}/Power`: Radio strength data
+- `{topic}/Stats`: Statistical data
+- `{topic}/Monitor`: Resource monitor data
+
+#### Example of Startup (for Mac OS)
+```bash
+./dist/twSdrPower.darwin -chart noise -gain 500 -dark -folder /tmp -interval 300 -sdr 0 -mqtt 192.168.1.250:1883
 ```
 
 ### Find Device
- -list  オプションを付けて起動でます。
-
-```
- % twSdrPower.app -list
+You can check the connected RTL-SDR device by starting it with the `-list` option.
+```bash
+$ ./dist/twSdrPower.darwin -list
 Device List count=1
 0,Generic RTL2832U OEM,Realtek,RTL2838UHIDIR,00000001
-``
-先頭の0がデバイス番号です。
+```
+The `0` at the beginning is the device number (value specified with the `-sdr` option).
 
 ## Copyright
 
 see ./LICENSE
 
 ```
-Copyright 2022 Masayuki Yamai
+Copyright 2022-2026 Masayuki Yamai
 ```
-
