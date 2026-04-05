@@ -1,8 +1,7 @@
 # twSdrPower
 [English Version](README.md)
 
-TWSNMP FCのための周波数別の無線電力センサーです。
-RTL-SDRを利用して周辺の電波の強度をモニタし、その情報をTWSNMP FCなどへ送信します。
+twSdrPowerは、RTL-SDRを活用して広範囲（24MHz〜1.7GHz）の無線周波数（RF）電力を監視する軽量なセンサーアプリケーションです。MQTTとSyslogを介してデータをストリーミングすることで、スペクトラム使用状況のリアルタイムな可視化を可能にし、電磁ノイズ調査やネットワーク統合型のRF監視に最適なツールとなります。
 
 [![Godoc Reference](https://img.shields.io/badge/godoc-reference-blue.svg)](https://pkg.go.dev/github.com/twsnmp/twSdrPower)
 [![Go Report Card](https://goreportcard.com/badge/twsnmp/twSdrPower)](https://goreportcard.com/report/twsnmp/twSdrPower)

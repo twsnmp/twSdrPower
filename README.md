@@ -1,8 +1,7 @@
 # twSdrPower
 [日本語版はこちら](README_ja.md)
 
-This sensor monitors radio power by frequency and transmits it via syslog and MQTT.
-It is designed to scan specific frequency ranges and provide signal strength data to management systems like TWSNMP FC.
+twSdrPower is a lightweight sensor application that leverages RTL-SDR to monitor radio frequency (RF) power across a wide range (24MHz - 1.7GHz). It enables real-time visualization of spectrum usage by streaming data via MQTT and Syslog, making it an ideal tool for electromagnetic noise surveys and network-integrated RF monitoring.
 
 [![Godoc Reference](https://img.shields.io/badge/godoc-reference-blue.svg)](https://pkg.go.dev/github.com/twsnmp/twSdrPower)
 [![Go Report Card](https://goreportcard.com/badge/twsnmp/twSdrPower)](https://goreportcard.com/report/twsnmp/twSdrPower)
