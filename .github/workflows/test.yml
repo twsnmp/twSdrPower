@@ -1,0 +1,32 @@
+name: Test and Build Check
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-check:
+    name: Build Check (Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+
+      - name: Build Linux Targets
+        run: |
+          mkdir -p dist
+          make dist/twSdrPower dist/twSdrPower.arm dist/twSdrPower.arm64
+
+      - name: Verify Executables
+        run: |
+          ls -lh dist/

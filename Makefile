@@ -1,8 +1,8 @@
 .PHONY: all test clean zip mac docker
 
 ### バージョンの定義
-VERSION     := $(shell git describe --tags --abbrev=0)
-COMMIT      := $(shell git rev-parse --short HEAD)
+VERSION     := $(shell git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+COMMIT      := $(shell git rev-parse --short HEAD 2>/dev/null || echo "head")
 WD          := $(shell pwd)
 ### コマンドの定義
 GO          = go
@@ -13,7 +13,7 @@ ZIP          = zip
 
 ### ターゲットパラメータ
 DIST = dist
-SRC = ./main.go ./sdrpower.go ./syslog.go ./monitor.go
+SRC = ./main.go ./sdrpower.go ./syslog.go ./monitor.go ./mqtt.go
 TARGETS_MAC     =  $(DIST)/twSdrPower.darwin
 TARGETS_LINUX     =  $(DIST)/twSdrPower $(DIST)/twSdrPower.arm $(DIST)/twSdrPower.arm64
 GO_PKGROOT  = ./...
