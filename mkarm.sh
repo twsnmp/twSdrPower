@@ -22,5 +22,5 @@ make
 make install
 cd /twSdrPower
 go mod tidy
-CC=arm-linux-gnueabihf-gcc GOOS=linux GOARCH=arm GOARM=7 CGO_ENABLED=1 go build -o $1/twSdrPower.arm  -ldflags="-w -extldflags '-static' -X main.version=$2 -X main.commit=$3"
+CC=arm-linux-gnueabihf-gcc GOOS=linux GOARCH=arm GOARM=7 CGO_ENABLED=1 go build -buildvcs=false -o $1/twSdrPower.arm  -ldflags="-w -extldflags '-static' -X main.version=$2 -X main.commit=$3"
 
